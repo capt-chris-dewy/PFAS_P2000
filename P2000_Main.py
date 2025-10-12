@@ -35,13 +35,27 @@ Motor1 = P2000_Comms.Motor("Mac Demotor", this_client, 5000, Encoder1, 0, 2, 1, 
 
 AngleIncrement = 360/78.0
 
-target_velo = 4 #deg/s
+#set the default movement parameters for large moves e.g. from 90 to 180 degrees
+#for smaller incrememental moves like the distance defined above, parameters are reset in "loopFixedSpacing"
+
+target_velo = 45 #deg/s
 target_accel = 45 #deg/s^2
 target_decel = 45 #deg/s^2
 
+#taking the default values for the kinematics above and writing them to the PLC
 Motor1.setVelo(target_velo)
 Motor1.setAccel(target_accel)
 Motor1.setDecel(target_decel)
+
+#make the above values the defaults as described
+Motor1.setDefaultVelo(target_velo)
+Motor1.setDefaultAccel(target_accel)
+Motor1.setDefaultDecel(target_decel)
+
+#setting the default kinematics for the smaller hole-hole loop
+Motor1.setLoopVelo(4) # deg /s 
+Motor1.setLoopAccel(16) # deg /s^2
+Motor1.setLoopDecel(16) # deg /s^2
 
 #initiating tkinter root
 #-----------------------------------------------------------------------------------------------------------------------------

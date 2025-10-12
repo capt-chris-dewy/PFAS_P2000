@@ -5,6 +5,10 @@ import sys
 
 import TK_Objects
 
+#credit for most of this design goes to this guy on reddit u/ekchew
+#thread where I found the threading info:
+#https://www.reddit.com/r/learnpython/comments/10qzto6/how_does_tkinter_multithreading_work_and_why/
+
 class _GUICallData:
 
     def __init__(self, fn, args, kwargs):

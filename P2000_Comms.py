@@ -70,6 +70,14 @@ class Motor:
     
     self.target_pos_mb = target_pos_mb #post move, previous target position is current position according to motor
     
+    #default target velocities / accelerations for larger moves i.e. not loops
+    self.default_velo = 0
+    self.default_accel = 0
+    self.default_decel = 0
+    
+    self.loop_velo = 0
+    self.loop_accel = 0
+    self.loop_decel = 0
     
     self.target_velo_mb = target_velo_mb
     self.target_accel_mb = target_accel_mb
@@ -84,6 +92,30 @@ class Motor:
   def isMoveComplete(self):
     move_complete = self.client.read_coils(self.move_complete_mb, count=1).bits[0]
     return move_complete
+
+  #setter functions for setting default velocity and acceleration during the larger moves
+    
+  def setDefaultVelo(self, new_default):
+    self.default_velo = new_default
+  
+  def setDefaultAccel(self, new_default):
+    self.default_accel = new_default
+  
+  def setDefaultDecel(self, new_default):
+    self.default_decel = new_default
+    
+  #set kinematics for smaller incremental loop going from hole to hole
+
+  def setLoopVelo(self, new_loop):
+    self.loop_velo = new_loop
+  
+  def setLoopAccel(self, new_loop):
+    self.loop_accel = new_loop
+  
+  def setLoopDecel(self, new_loop):
+    self.loop_decel = new_loop
+
+  #for actually setting these kinematics in the PLC via MODBUS
 
   def setVelo(self, target_velo):
     rounded_target = round(target_velo, 2) #to two decimal places
@@ -134,6 +166,10 @@ class Motor:
     self.PAUSE_AUTO_FLAG.clear()
   
   def loopFixedSpacing(self, spacing):
+    
+    self.setVelo(self.loop_velo) # deg /s 
+    self.setAccel(self.loop_accel) # deg /s^2
+    self.setDecel(self.loop_decel) # deg /s^2
 
     current_target = 0
     i = 0
@@ -163,6 +199,11 @@ class Motor:
     print("iterations / number of moves = " + str(i))  
   
     self.LOOP_COMPLETION_FLAG = True
+    
+    #return to normal values
+    self.setVelo(self.default_velo) # deg /s 
+    self.setAccel(self.default_accel) # deg /s^2
+    self.setDecel(self.default_decel) # deg /s^2
 
   def zeroMotorEncoder(self): 
     self.client.write_coil(self.zero_mb, True)

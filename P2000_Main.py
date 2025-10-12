@@ -34,14 +34,6 @@ Encoder1 = P2000_Comms.Encoder("Mr. Roboto", this_client, 4096, 2, 16)
 Motor1 = P2000_Comms.Motor("Mac Demotor", this_client, 5000, Encoder1, 0, 2, 1, 10, 11, 12, 13) #other name ideas: Motorola
 
 AngleIncrement = 360/78.0
-#defining a single instance of the thread overseeing the automated loop: doesn't work because a thread can only be started once
-#autoplay_thread = Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))
-
-#creating a new thread of a different name every time a new automated loop is called
-#plus an array of booleans effectively keeping track of whether each thread ought to be dead or not
-
-thread_array = []
-thread_killed_array = []
 
 #set the default movement parameters for large moves e.g. from 90 to 180 degrees
 #for smaller incrememental moves like the distance defined above, parameters are reset in "loopFixedSpacing"
@@ -116,15 +108,13 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
       
     #initialize autoplay
     if (app.make_gui_call(SpinnyWheelFrame.getAutoActivator) == True):
+      #creates a new thread every time, which has to be properly disposed of so that it doesn't start back up with the next
+      #autoplay
+
+      autoplay_thread = Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))
+      autoplay_thread.start()
       #Motor1.setAutoFlag() #bit bang to get started up? <----seems unnecessary because thread hasn't even started yet
       Motor1.resetAutoFlag() #<--- this may be necessary because if event is reset, it will pause after the first loop iteration
-      thread_array.append(Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))) #new thread
-      thread_array[-1].start()
-      #print(id(thread_array[-1])) #question: since the new thread has the same definition as previous ones, does that explain
-                                  #why they both run simultaneously with the new and where the previous left off?
-                                  #are they stored in the same memory location?
-                                  #the threads have different locations!
-
       app.make_gui_call(SpinnyWheelFrame.setAutoActivator, False) #the activator bit goes dead again so that this only
                                                                   #runs once per autoplay         
    
@@ -144,6 +134,13 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
       #OR if the user has pressed the "kill" button for the autoplay, shut if off gracefully 
       
       if Motor1.LOOP_COMPLETION_FLAG == True or app.make_gui_call(SpinnyWheelFrame.getAutoKilled) == True:
+        if app.make_gui_call(SpinnyWheelFrame.getAutoKilled) == True: #the "killed case"
+          Motor1.KILLED_FLAG = True
+          #bit bang -- at the end of the previous move, thread is still waiting at pause. allow it to progress to
+          #encounter the if statement that will end the function
+          Motor1.setAutoFlag()
+          Motor1.resetAutoFlag()
+
         app.make_gui_call(SpinnyWheelFrame.autoplay_button_text.set, "Play")
         app.make_gui_call(SpinnyWheelFrame.setAutoOngoing, False)
 

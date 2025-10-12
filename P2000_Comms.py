@@ -84,6 +84,7 @@ class Motor:
     self.target_decel_mb = target_decel_mb
   
     self.PAUSE_AUTO_FLAG = Event()
+    self.KILLED_FLAG = False
     self.LOOP_COMPLETION_FLAG = False
   
     Motor.LIST.append(self)
@@ -197,6 +198,9 @@ class Motor:
  
       self.PAUSE_AUTO_FLAG.wait() #should operate as normal if flag is "set", but when "reset" will pause the thread
 
+      if self.KILLED_FLAG == True: #reset parameters so that when thread starts back up it can go back to zero
+        self.KILLED_FLAG = False #reset for the next thread run for this motor before killing this one
+        return
        
     print("iterations / number of moves = " + str(i))  
   

@@ -160,9 +160,11 @@ class Motor:
     self.client.write_coil(self.move_on_mb, True)  
 
   def setAutoFlag(self):
+    #sets the flag to be true so that any "wait" statement encountered by the thread will be ignored
     self.PAUSE_AUTO_FLAG.set()
   
   def resetAutoFlag(self):
+    #reset the flag so that the thread pauses at the involved wait statements
     self.PAUSE_AUTO_FLAG.clear()
   
   def loopFixedSpacing(self, spacing):

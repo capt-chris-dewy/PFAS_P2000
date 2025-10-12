@@ -60,7 +60,7 @@ class MotorFrame(): #sounds way cooler than it is
     self.zero_activate = False
     self.motion_activate = False
 
-    #all of the TKInter stuff... sorry for the mess!
+    #all of the TKInter stuff... sorry in advance for the mess!
     self.label_frame = tk.LabelFrame(self.masterFrame, text="Motor 1 (Wheel Motor)",font=("Arial", 28)) 
     self.label_frame.place(relx=0.925, rely=0.25, anchor="e") #placed at top left with some lil offsets
     self.label_frame["bg"] = "pink"
@@ -143,14 +143,20 @@ class MotorFrame(): #sounds way cooler than it is
   def setAutoOngoing(self, new_state):
     self.autoplay_ongoing = new_state
   
+  #callback function runs every time play/pause button is pressed
   def autoplay_toggle(self):
     if self.autoplay_ongoing == True:
-      self.autoplay_button_text.set("Play")
-      #self.autoplay_shutoff = True
-    else:
+      if self.autoplay_shutoff == False:
+        self.autoplay_button_text.set("Play")
+        self.autoplay_shutoff = True
+      else: 
+        self.autoplay_button_text.set("Pause")
+        self.autoplay_shutoff = False
+   
+    else: #simulate button being pressed for the first time, "initialize"
       self.autoplay_activate = True
       self.autoplay_ongoing = True
-      #self.autoplay_shutoff = False #reset this fella from previous shutoffs, potentially
+      self.autoplay_shutoff = False #reset this fella from previous shutoffs, potentially
       self.autoplay_button_text.set("Pause")
 
   def getMoveActivator(self):

@@ -34,6 +34,14 @@ Encoder1 = P2000_Comms.Encoder("Mr. Roboto", this_client, 4096, 2, 16)
 Motor1 = P2000_Comms.Motor("Mac Demotor", this_client, 5000, Encoder1, 0, 2, 1, 10, 11, 12, 13) #other name ideas: Motorola
 
 AngleIncrement = 360/78.0
+#defining a single instance of the thread overseeing the automated loop: doesn't work because a thread can only be started once
+#autoplay_thread = Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))
+
+#creating a new thread of a different name every time a new automated loop is called
+#plus an array of booleans effectively keeping track of whether each thread ought to be dead or not
+
+thread_array = []
+thread_killed_array = []
 
 #set the default movement parameters for large moves e.g. from 90 to 180 degrees
 #for smaller incrememental moves like the distance defined above, parameters are reset in "loopFixedSpacing"
@@ -108,10 +116,15 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
       
     #initialize autoplay
     if (app.make_gui_call(SpinnyWheelFrame.getAutoActivator) == True):
-      autoplay_thread = Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))
-      Motor1.setAutoFlag() #bit bang to get started up? <----seems unnecessary because thread hasn't even started yet
-      Motor1.resetAutoFlag() #<--- this may be necessary becaues if event is reset, it will pause after the first loop iteration
-      autoplay_thread.start()
+      #Motor1.setAutoFlag() #bit bang to get started up? <----seems unnecessary because thread hasn't even started yet
+      Motor1.resetAutoFlag() #<--- this may be necessary because if event is reset, it will pause after the first loop iteration
+      thread_array.append(Thread(target=Motor1.loopFixedSpacing, args=(AngleIncrement,))) #new thread
+      thread_array[-1].start()
+      #print(id(thread_array[-1])) #question: since the new thread has the same definition as previous ones, does that explain
+                                  #why they both run simultaneously with the new and where the previous left off?
+                                  #are they stored in the same memory location?
+                                  #the threads have different locations!
+
       app.make_gui_call(SpinnyWheelFrame.setAutoActivator, False) #the activator bit goes dead again so that this only
                                                                   #runs once per autoplay         
    
@@ -128,9 +141,15 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
     if app.make_gui_call(SpinnyWheelFrame.getAutoOngoing) == True:
       
       #when the thread overseeing automated loop ends, return to original state
-      if Motor1.LOOP_COMPLETION_FLAG == True:
+      #OR if the user has pressed the "kill" button for the autoplay, shut if off gracefully 
+      
+      if Motor1.LOOP_COMPLETION_FLAG == True or app.make_gui_call(SpinnyWheelFrame.getAutoKilled) == True:
         app.make_gui_call(SpinnyWheelFrame.autoplay_button_text.set, "Play")
         app.make_gui_call(SpinnyWheelFrame.setAutoOngoing, False)
+
+        Motor1.setVelo(Motor1.default_velo) # deg /s 
+        Motor1.setAccel(Motor1.default_accel) # deg /s^2
+        Motor1.setDecel(Motor1.default_decel) # deg /s^2
 
       if app.make_gui_call(SpinnyWheelFrame.getAutoShutoff) == True:
         #loop has been paused via user hitting pause/play button
@@ -149,43 +168,7 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
           #after a move is initiated while waiting for the motor to physically complete its move
           Motor1.setAutoFlag()
           Motor1.resetAutoFlag() 
-    """
-    if (app.make_gui_call(SpinnyWheelFrame.getAutoOngoing) == True and 
-      app.make_gui_call(SpinnyWheelFrame.getAutoShutoff) == True and
-      Motor1.PAUSE_AUTO_FLAG.is_set() == True): #pause thread after next move
-     
-       Motor1.resetAutoFlag() #pause thread after next move
-      
-    if (app.make_gui_call(SpinnyWheelFrame.getAutoOngoing) == True and 
-      app.make_gui_call(SpinnyWheelFrame.getAutoShutoff) == False and
-      Motor1.PAUSE_AUTO_FLAG.is_set() == False): 
-      
-      Motor1.setAutoFlag() #resume thread
-    """
-    
-    """
-    if (app.make_gui_call(SpinnyWheelFrame.getAutoOngoing) == True and 
-        app.make_gui_call(SpinnyWheelFrame.getAutoShutoff) == False): #extra condition to make sure the motor doesn't get
-                                                                      #"woken up" while the shutoff is activated when
-                                                                      #the pause button is pressed
-      print("is move complete? " + str(Motor1.isMoveComplete()))
-      if(Motor1.isMoveComplete() == True):
-        #very quick bit bang of the flag blocking each iteration of the loop -- basically the secondary thread controlling
-        #the loop motion was allowed to iterate through its entire loop by the time the flag blocking its progress got 
-        #reset here after another iteration of this loop -- not sure if my code is the most proper, but it works
-        #even though the intention of this flag was to work with the pause/play button, it is necessary to pause the thread
-        #after a move is initiated while waiting for the motor to physically complete its move
-        Motor1.setAutoFlag()
-        Motor1.resetAutoFlag()
-    """
 
-    """ 
-    if (app.make_gui_call(SpinnyWheelFrame.getAutoOngoing) == True and 
-      Motor1.LOOP_COMPLETION_FLAG == True):
-
-      app.make_gui_call(SpinnyWheelFrame.autoplay_button_text.set, "Play")
-      app.make_gui_call(SpinnyWheelFrame.setAutoOngoing, False)
-    """
 app.set_threadFn(mainThread)
 #according to original reddit post, mainloop() of TKInter GUI should be started after the masterThread above
 #should really put the hyperlink to the source here:

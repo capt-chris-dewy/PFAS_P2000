@@ -59,6 +59,7 @@ class MotorFrame(): #sounds way cooler than it is
     self.autoplay_shutoff = False
     self.zero_activate = False
     self.motion_activate = False
+    self.autoplay_killed = False
 
     #all of the TKInter stuff... sorry in advance for the mess!
     self.label_frame = tk.LabelFrame(self.masterFrame, text="Motor 1 (Wheel Motor)",font=("Arial", 28)) 
@@ -66,7 +67,7 @@ class MotorFrame(): #sounds way cooler than it is
     self.label_frame["bg"] = "pink"
  
     self.autoplay_label_text = tk.StringVar()
-    self.autoplay_label_text.set("Initiate Automated Testing --> ")
+    self.autoplay_label_text.set("Automated Testing Loop")
     self.autoplay_label = tk.Label(self.label_frame, textvariable=(self.autoplay_label_text), font=("Arial", 20))
     self.autoplay_label.grid(row = 0, column = 0, padx = 0, pady = 10)
     
@@ -74,26 +75,32 @@ class MotorFrame(): #sounds way cooler than it is
     self.autoplay_button_text.set("Play")
     self.autoplay = tk.Button(self.label_frame, textvariable=(self.autoplay_button_text), font=("Arial", 20), 
                               command=self.autoplay_toggle)
-    self.autoplay.grid(row = 0, column = 1, padx=0, pady=15)
+    self.autoplay.grid(row = 1, column = 0, padx=0, pady=15)
+    
+    self.kill_button_text = tk.StringVar()
+    self.kill_button_text.set("Kill")
+    self.kill = tk.Button(self.label_frame, textvariable=(self.kill_button_text), font=("Arial", 20), 
+                              command=self.autoplay_kill)
+    self.kill.grid(row = 1, column = 1, padx=0, pady=15)
     
     self.entry1_label_text = tk.StringVar()
     self.entry1_label_text.set("Manual Motor Position = ")
     self.entry1_label = tk.Label(self.label_frame, textvariable=(self.entry1_label_text), font=("Arial", 20))
-    self.entry1_label.grid(row = 1, column = 0, padx = 5, pady = 10)
+    self.entry1_label.grid(row = 2, column = 0, padx = 5, pady = 10)
     
     self.entry1 = tk.Entry(self.label_frame, font=("Arial", 20))
-    self.entry1.grid(row = 1, column = 1)
+    self.entry1.grid(row = 2, column = 1)
 
     self.motor1_zerobutton = tk.Button(self.label_frame, text="Zero", font=("Arial", 16), command=self.zero_command)
-    self.motor1_zerobutton.grid(row = 2, column = 0, padx=0, pady=15)
+    self.motor1_zerobutton.grid(row = 3, column = 0, padx=0, pady=15)
     
     self.entry1_moveabs = tk.Button(self.label_frame, text="Move", font=("Arial", 16), command=self.move_command)
-    self.entry1_moveabs.grid(row = 2, column = 1, padx=0, pady=15)
+    self.entry1_moveabs.grid(row = 3, column = 1, padx=0, pady=15)
 
     self.encoder_pos_text = tk.StringVar()
     self.encoder_pos_text.set("Encoder Pos = default value")
     self.encoder_pos_label = tk.Label(self.label_frame, textvariable=(self.encoder_pos_text), font=("Arial", 20))
-    self.encoder_pos_label.grid(row = 3, column = 0, padx = 15, pady = 10)
+    self.encoder_pos_label.grid(row = 4, column = 0, padx = 15, pady = 10)
 
   def check_string_float(self, input_string):
     try:
@@ -136,6 +143,9 @@ class MotorFrame(): #sounds way cooler than it is
   
   def getAutoShutoff(self):
     return self.autoplay_shutoff
+  
+  def getAutoKilled(self):
+    return self.autoplay_killed
 
   def setAutoActivator(self, new_state):
     self.autoplay_activate = new_state
@@ -156,8 +166,19 @@ class MotorFrame(): #sounds way cooler than it is
     else: #simulate button being pressed for the first time, "initialize"
       self.autoplay_activate = True
       self.autoplay_ongoing = True
-      self.autoplay_shutoff = False #reset this fella from previous shutoffs, potentially
+      self.autoplay_shutoff = False #reset these fellas from previous shutoffs, potentially
+      self.autoplay_killed = False
       self.autoplay_button_text.set("Pause")
+  
+  def autoplay_kill(self):
+    #testing loop is ongoing and paused
+    if self.autoplay_ongoing == True:
+      #kill the loop where it's at :(
+      self.autoplay_killed = True
+      print("current loop has been killed")
+    else:
+      print("loop must be ongoing / started and not yet complete to be killed")
+      pass
 
   def getMoveActivator(self):
     return self.motion_activate

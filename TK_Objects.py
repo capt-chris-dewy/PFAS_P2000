@@ -1,5 +1,4 @@
 import tkinter as tk
-import P2000_Comms
 
 class SensorFrame():
   def __init__(self, masterFrame, senseArray):
@@ -116,7 +115,6 @@ class MotorFrame(): #sounds way cooler than it is
     if self.check_string_float(raw_text) == True and float(raw_text) >= 0.0 and float(raw_text) <= 360.0:
       return float(raw_text)       
     else:
-      print("error: string in entry field could not be converted to a float, or float value is out of range (0-360 for wheel)") 
       return None
   
   def setMotorEntry(self, entry_nouveau):

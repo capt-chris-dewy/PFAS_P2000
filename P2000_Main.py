@@ -90,15 +90,18 @@ def mainThread(): #originally a threadFn contained as a method in the "app" clas
     #print(app.make_gui_call(SpinnyWheelFrame.convertMotorEntry))             
 
     if app.make_gui_call(SpinnyWheelFrame.getMoveActivator) == True:
-      if app.make_gui_call(SpinnyWheelFrame.convertMotorEntry) != None:
-        #start a new thread, moving the motor to the position in the field
-        targetPosition = app.make_gui_call(SpinnyWheelFrame.convertMotorEntry)
+      #start a new thread, moving the motor to the position in the field
+      targetPosition = app.make_gui_call(SpinnyWheelFrame.convertMotorEntry)
+     
+      if targetPosition == None: #convertMotorEntry return if input is not an angle between 0 and 360
+        print("input invalid: must be a float between 0 and 360 for angle position")
+      else:
         move_abs_thread = Thread(target=Motor1.absolute_move, args=(targetPosition,))
         move_abs_thread.start()
- 
-        app.make_gui_call(SpinnyWheelFrame.setMoveActivator, False) #so that the move doesn't repeat itself each time
-                                                                    #the loop runs
-    
+
+      app.make_gui_call(SpinnyWheelFrame.setMoveActivator, False) #so that the move doesn't repeat itself each time
+                                                                  #the loop runs
+      
     if app.make_gui_call(SpinnyWheelFrame.getZeroActivator) == True:
       zeroing_thread = Thread(target=Motor1.zeroMotorEncoder)
       zeroing_thread.start()

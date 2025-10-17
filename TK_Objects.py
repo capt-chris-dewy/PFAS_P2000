@@ -113,6 +113,7 @@ class MotorFrame(): #sounds way cooler than it is
   def convertMotorEntry(self):
     raw_text = self.entry1.get()
     if self.check_string_float(raw_text) == True and float(raw_text) >= 0.0 and float(raw_text) <= 360.0:
+      #print(raw_text)
       return float(raw_text)       
     else:
       return None
@@ -185,7 +186,8 @@ class MotorFrame(): #sounds way cooler than it is
     self.motion_activate = new_state
 
   def move_command(self):
-    if self.MotorOBJ.isMoveComplete() == True: #check if the motor is not in motion
+    if self.MotorOBJ.isMoveComplete() == True or self.MotorOBJ.ABS_MOVE_COUNT == 0:
+      print("condition met")
       self.motion_activate = True 
     else:
       pass
@@ -197,7 +199,9 @@ class MotorFrame(): #sounds way cooler than it is
     self.zero_activate = new_state
   
   def zero_command(self):
-    if self.MotorOBJ.isMoveComplete() == True: #check if the motor is not in motion
+    #check if motor not in motion -- when PLC starts up, motion complete bit is false
+    if self.MotorOBJ.isMoveComplete() == True or self.MotorOBJ.ABS_MOVE_COUNT == 0:
+      print("condition met")
       self.zero_activate = True
     else:
       pass

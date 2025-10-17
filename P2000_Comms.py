@@ -86,6 +86,9 @@ class Motor:
     self.PAUSE_AUTO_FLAG = Event()
     self.KILLED_FLAG = False
     self.LOOP_COMPLETION_FLAG = False
+
+    self.ABS_MOVE_COUNT = 0 #increment every time absolute_move function runs, which happens also repeatedly
+                            #during the automated loop
   
     Motor.LIST.append(self)
 
@@ -155,11 +158,15 @@ class Motor:
     #PLC software ladder code
     self.client.write_register(self.target_pos_mb, rounded_target_mb)
     
+    #print("target pos mb: " + str(self.client.read_holding_registers(self.target_pos_mb)))
+    
     #from previous moves, this coil may still be active -- turn it off just in case, every time
     self.client.write_coil(self.move_on_mb, False)   
     #then bit bang to start actual motion
     self.client.write_coil(self.move_on_mb, True)  
 
+    self.ABS_MOVE_COUNT = self.ABS_MOVE_COUNT + 1
+    print("move count: " + str(self.ABS_MOVE_COUNT))
   def setAutoFlag(self):
     #sets the flag to be true so that any "wait" statement encountered by the thread will be ignored
     self.PAUSE_AUTO_FLAG.set()
